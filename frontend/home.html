@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DeepFake Detector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="home" class="min-h-screen text-white">
+
+  <!-- Neural network canvas -->
+  <canvas id="neural-bg"></canvas>
+
+  <!-- Ambient orbs -->
+  <div class="orb orb-1" aria-hidden="true"></div>
+  <div class="orb orb-2" aria-hidden="true"></div>
+  <div class="orb orb-3" aria-hidden="true"></div>
+
+  <!-- Navbar -->
+  <nav class="glass-card border-b border-white/8 px-6 py-4 flex items-center justify-between"
+    style="border-left:none;border-right:none;border-top:none;border-radius:0;">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+        style="background: linear-gradient(135deg, #e2e8f0, #94a3b8); box-shadow: 0 0 14px rgba(226,232,240,0.18);">
+        <svg class="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+        </svg>
+      </div>
+      <span class="font-bold tracking-tight text-white">DeepFake Detector</span>
+    </div>
+    <button id="logout-btn" class="text-zinc-500 hover:text-slate-300 text-sm font-medium transition-colors">
+      Sign out
+    </button>
+  </nav>
+
+  <!-- Main grid -->
+  <main class="max-w-7xl mx-auto px-6 py-10 grid grid-cols-2 gap-10 items-start">
+
+    <!-- LEFT: upload panel -->
+    <section id="upload-panel">
+      <h2 class="text-xl font-bold text-white mb-1">Analyze an Image</h2>
+      <p class="text-zinc-500 text-sm mb-5">Upload a portrait to detect AI manipulation</p>
+
+      <!-- Drop zone -->
+      <div id="drop-zone"
+        class="glass-card border-2 border-dashed border-white/15 rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-slate-400/40 transition-colors min-h-[280px]">
+
+        <!-- Hint -->
+        <div id="drop-hint" class="text-center pointer-events-none">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-white/6 border border-white/10">
+            <svg class="w-7 h-7 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+            </svg>
+          </div>
+          <p class="text-zinc-200 font-semibold">Drag &amp; drop an image</p>
+          <p class="text-zinc-500 text-sm mt-1">or click to browse</p>
+          <p class="text-zinc-700 text-xs mt-3">JPEG / PNG · Max 10MB</p>
+        </div>
+
+        <!-- Image preview -->
+        <img id="preview-img"
+          class="hidden max-h-52 max-w-full rounded-xl object-contain"
+          alt="Preview">
+
+        <input id="file-input" type="file" accept="image/jpeg,image/png" class="hidden">
+      </div>
+
+      <p id="upload-error" class="text-red-400 text-sm mt-2 min-h-[20px]"></p>
+
+      <!-- Analyze button -->
+      <div class="mt-4 flex items-center gap-4">
+        <button id="analyze-btn" disabled class="btn-primary px-8 py-3 rounded-xl">
+          Analyze
+        </button>
+        <div id="loading-spinner" class="hidden flex items-center gap-2">
+          <div class="spinner"></div>
+          <span class="text-zinc-500 text-sm">Analyzing...</span>
+        </div>
+      </div>
+
+      <!-- What to upload -->
+      <div class="mt-5 glass-card rounded-2xl p-5">
+        <h3 class="font-semibold text-white mb-3 text-sm">What to upload</h3>
+        <ul class="space-y-2 text-sm text-zinc-500">
+          <li class="flex items-center gap-2">
+            <span class="text-green-400 font-bold">✓</span> Clear portrait or facial images
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="text-green-400 font-bold">✓</span> JPEG or PNG, max 10MB
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="text-slate-300 font-bold">△</span> Low-res images may reduce accuracy
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="text-red-400 font-bold">✗</span> Heavily cropped or edited images
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- RIGHT: awareness content -->
+    <aside class="space-y-4">
+      <!-- Why this matters -->
+      <div class="glass-card rounded-2xl p-5">
+        <h3 class="font-semibold text-white mb-2">Why This Matters</h3>
+        <p class="text-zinc-500 text-sm leading-relaxed">
+          AI-generated media has become increasingly convincing and widely accessible.
+          Deepfakes are being used to spread misinformation, impersonate individuals,
+          and manipulate public perception — often with serious personal, political,
+          and financial consequences. As synthetic media grows harder to distinguish
+          from reality, tools that help verify authenticity are becoming essential.
+        </p>
+      </div>
+
+      <!-- What is a deepfake -->
+      <div class="glass-card rounded-2xl p-5">
+        <h3 class="font-semibold text-white mb-2">What is a deepfake?</h3>
+        <p class="text-zinc-500 text-sm leading-relaxed">
+          Deepfakes are AI-generated images or videos that convincingly replace a person's
+          likeness with another's. Using GANs and diffusion models, they can be nearly
+          indistinguishable from authentic media to the human eye.
+        </p>
+      </div>
+
+      <!-- How detection works -->
+      <div class="glass-card rounded-2xl p-5">
+        <h3 class="font-semibold text-white mb-2">How detection works</h3>
+        <p class="text-zinc-500 text-sm leading-relaxed mb-4">
+          This tool uses a ResNet50-based classifier fine-tuned on real and AI-generated
+          images. The <span class="text-slate-300 font-medium">GradCAM overlay</span>
+          highlights which regions influenced the prediction — typically eyes, skin texture,
+          and hair boundaries where synthesis artifacts appear.
+        </p>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-green-400 shrink-0"></span>
+            <span class="text-zinc-500"><span class="text-zinc-300 font-medium">Below 30%</span> — likely authentic</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0"></span>
+            <span class="text-zinc-500"><span class="text-zinc-300 font-medium">30–70%</span> — uncertain, review carefully</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-red-400 shrink-0"></span>
+            <span class="text-zinc-500"><span class="text-zinc-300 font-medium">Above 70%</span> — likely AI-generated</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <script src="main.js"></script>
+  <script src="neural-bg.js"></script>
+</body>
+</html>

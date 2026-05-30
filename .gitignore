@@ -1,0 +1,31 @@
+# Environment secrets
+.env
+
+# Claude Code tooling
+.claude/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+env/
+myenv/
+
+# Dataset & training data
+data/
+checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+*.log

@@ -1,0 +1,83 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: deepfake-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - deepfake-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U deepfake_user -d deepfake_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: deepfake-ml
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ml-service/models:/app/models:ro
+    networks:
+      - deepfake-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  node-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: deepfake-backend
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      ML_SERVICE_URL: http://ml-service:8000
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRY_MS: ${JWT_EXPIRY_MS}
+      PORT: "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ml-service:
+        condition: service_healthy
+    networks:
+      - deepfake-net
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: deepfake-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      node-backend:
+        condition: service_healthy
+    networks:
+      - deepfake-net
+
+networks:
+  deepfake-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
